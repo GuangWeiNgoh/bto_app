@@ -17,14 +17,29 @@ def display():
 
     # Function to display the chat messages
     def display_messages():
-        for message in st.session_state.messages:
+        # Loop through the messages in reverse order
+        for message in reversed(st.session_state.messages):
             if message["role"] == "user":
-                st.markdown(f"**You:** {message['content']}")
+                st.markdown(
+                    f"""
+                    <div style="border: 1px solid white; border-radius: 8px; padding: 10px; margin: 10px 0; background-color: transparent;">
+                        <strong>You:</strong> {message['content']}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
             else:
-                st.markdown(f"**Assistant:** {message['content']}")
+                st.markdown(
+                    f"""
+                    <div style="border: 1px solid #FFD700; border-radius: 8px; padding: 10px; margin: 10px 0; background-color: transparent;">
+                        <strong style="color: #FFD700;">Assistant:</strong> <span style="color: #FFD700;">{message['content']}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
     # Display existing chat messages
-    display_messages()
+    # display_messages()
 
     user_input = st.text_area("Ask your question:")
     
