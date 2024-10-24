@@ -5,8 +5,8 @@ from tabs import eligibility_checker, bto_assistant, about_us, methodology
 from utility import check_password
 
 # Do not continue if check_password is not True.  
-if not check_password():  
-    st.stop()
+#if not check_password():  
+#    st.stop()
 
 # Set the page configuration
 st.set_page_config(page_title="BTO App", layout="wide")
