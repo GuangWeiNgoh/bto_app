@@ -116,7 +116,7 @@ def display():
                 try:
 
                     prompt = f"""
-                    Please read the following query and focus on Singapore HDB related information.
+                    Please read the following query and strictly focus on Singapore HDB related information only. Strictly do not respond if it is not relatedto HDB.
                     <user_input>
                     ``` 
                     {user_input}
