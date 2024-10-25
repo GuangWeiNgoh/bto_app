@@ -1,4 +1,3 @@
-# pages/bto_assistant.py
 import streamlit as st
 from openai import OpenAI
 from crewai import Agent, Task, Crew
@@ -18,8 +17,8 @@ tool_websearch = WebsiteSearchTool("https://www.hdb.gov.sg/")
 # Agent: Question Planner
 agent_question_planner = Agent(
     role="Question Planner",
-    goal="Plan how to answer the user question about HDB BTO: {question}",
-    backstory="Your task is to break down the question into key areas related to HDB BTO that need research.",
+    goal="Plan how to answer the user question about Singapore HDB: {question}",
+    backstory="Your task is to break down the question into key areas related to Singapore HDB that need research.",
     allow_delegation=False,
     verbose=True,
 )
@@ -28,7 +27,7 @@ agent_question_planner = Agent(
 agent_researcher = Agent(
     role="Research Analyst",
     goal="Conduct research to answer the question: {question}",
-    backstory="You will gather information from the HDB website to provide accurate answers about HDB BTO flats.",
+    backstory="You will gather information from the Singapore HDB website to provide accurate answers about Singapore HDB flats.",
     allow_delegation=False,
     verbose=True,
 )
@@ -45,10 +44,10 @@ agent_answer_writer = Agent(
 # Task: Plan the question breakdown
 task_plan = Task(
     description="""\
-    1. Break down the user question into sub-questions or key areas related to HDB BTO.
+    1. Break down the user question into sub-questions or key areas related to Singapore HDB.
     2. Identify the main topics needed to answer the question (e.g., eligibility, process, costs, etc.).""",
     expected_output="""\
-    An outline of the key areas to address in the answer related to HDB BTO.""",
+    An outline of the key areas to address in the answer related to Singapore HDB.""",
     agent=agent_question_planner,
     async_execution=True
 )
@@ -56,11 +55,11 @@ task_plan = Task(
 # Task: Research the answer by gathering information from the HDB website
 task_research = Task(
     description="""\
-    1. Conduct research on the HDB website about the user question on BTO.
+    1. Conduct research on the HDB website about the user question on Singapore HDB.
     2. Gather relevant information (eligibility, application process, pricing, etc.).
     3. Provide a summary of the findings that will help answer the user’s question.""",
     expected_output="""\
-    A detailed research report with key information about HDB BTO from the website.""",
+    A detailed research report with key information about Singapore HDB from the website.""",
     agent=agent_researcher,
     tools=[tool_websearch],  # Using the web scraping tool to search and gather data
     async_execution=True
@@ -73,7 +72,7 @@ task_write = Task(
     2. Structure the answer with an introduction, key points (eligibility, process, etc.), and a conclusion.
     3. Ensure the answer is easy to understand and factually correct.""",
     expected_output="""\
-    A concise, structured answer to the user question about HDB BTO.""",
+    A concise, structured answer to the user question about Singapore HDB.""",
     agent=agent_answer_writer,
     context=[task_plan, task_research],  # The writer depends on the planner and researcher tasks
     output_file="bto_answer.txt"
@@ -88,8 +87,8 @@ crew = Crew(
 
 # Function to display the chatbot
 def display():
-    st.title("✨ BTO Assistant")
-    st.write("Get assistance with your BTO application from GPT 3.5 Turbo & information straight from HDB's website.")
+    st.title("✨ HDB Assistant")
+    st.write("Get assistance with your HDB questions from GPT 3.5 Turbo & information straight from HDB's website.")
 
     # Initialize session state for messages if it doesn't exist
     if 'messages' not in st.session_state:
@@ -115,8 +114,19 @@ def display():
 
             with st.spinner("Getting GPT response..."):
                 try:
+
+                    prompt = f"""
+                    Please read the following query and focus on Singapore HDB related information.
+                    <user_input>
+                    ``` 
+                    {user_input}
+                    ``` 
+                    </user_input>
+                    Please provide a structured answer based on the above question. Your response should only contain information specific to the above question. Ensure your answer starts with "Answer: ".
+                    """
+
                     # Append the user's message to the conversation history
-                    st.session_state.messages.append({"role": "user", "content": user_input})
+                    st.session_state.messages.append({"role": "user", "content": prompt})
 
                     # Make a request to OpenAI using ChatCompletion
                     response = client.chat.completions.create(
@@ -144,7 +154,7 @@ def display():
                             return file.read()   
                         
                     # Call the function to get the answer
-                    websearch_response = get_hdb_bto_answer(user_input)
+                    websearch_response = get_hdb_bto_answer(prompt)
 
                     # Add the web search results to the assistant's response
                     st.session_state.messages.append({"role": "assistant", "content": "Additional info from HDB:\n" + websearch_response})
@@ -158,6 +168,5 @@ def display():
         else:
             st.warning("Please enter a question.")
 
-# This is a typical structure for a Streamlit app
 if __name__ == "__main__":
     display()

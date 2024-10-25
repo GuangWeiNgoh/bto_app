@@ -1,6 +1,6 @@
 # app.py
 import streamlit as st
-from tabs import eligibility_checker, bto_assistant, about_us, methodology
+from tabs import eligibility_checker, about_us, hdb_assistant, methodology
 
 from utility import check_password
 
@@ -34,8 +34,8 @@ def navigate_to(page_name):
 st.sidebar.header("Navigation")
 if st.sidebar.button("🏠 BTO Eligibility Checker"):
     navigate_to("BTO Eligibility Checker")
-if st.sidebar.button("✨ BTO Assistant"):
-    navigate_to("BTO Assistant")
+if st.sidebar.button("✨ HDB Assistant"):
+    navigate_to("HDB Assistant")
 if st.sidebar.button("👥 About Us"):
     navigate_to("About Us")
 if st.sidebar.button("📚 Methodology"):
@@ -44,8 +44,8 @@ if st.sidebar.button("📚 Methodology"):
 # Route to the selected page
 if st.session_state.page == "BTO Eligibility Checker":
     eligibility_checker.display()
-elif st.session_state.page == "BTO Assistant":
-    bto_assistant.display()
+elif st.session_state.page == "HDB Assistant":
+    hdb_assistant.display()
 elif st.session_state.page == "About Us":
     about_us.display()
 elif st.session_state.page == "Methodology":
