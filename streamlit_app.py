@@ -13,7 +13,7 @@ from utility import check_password
 #    st.stop()
 
 # Set the page configuration
-st.set_page_config(page_title="BTO App", layout="wide")
+st.set_page_config(page_title="HDB Explorer", layout="wide")
 
 # Initialize session state for page tracking
 if 'page' not in st.session_state:
@@ -48,12 +48,12 @@ if st.sidebar.button("📚 Methodology"):
     navigate_to("Methodology")
 
 # Route to the selected page
-if st.session_state.page == "BTO Eligibility Checker":
-    eligibility_checker.display()
-elif st.session_state.page == "HDB Resale Transactions Explorer":
+if st.session_state.page == "HDB Resale Transactions Explorer":
     resale_transactions_explorer.display()
 elif st.session_state.page == "HDB Assistant":
     hdb_assistant.display()
+elif st.session_state.page == "BTO Eligibility Checker":
+    eligibility_checker.display()
 elif st.session_state.page == "About Us":
     about_us.display()
 elif st.session_state.page == "Methodology":
