@@ -104,7 +104,7 @@ def display():
                     unsafe_allow_html=True,
                 )
 
-    user_input = st.text_area("Ask your question about BTO:", placeholder="E.g., What are the new BTO launches in 2025?")
+    user_input = st.text_area("Ask any HDB related question:", placeholder="E.g., What are the new BTO launches in 2025?")
 
     if st.button("Submit"):
         if user_input:
