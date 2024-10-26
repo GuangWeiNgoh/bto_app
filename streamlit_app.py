@@ -13,7 +13,7 @@ st.set_page_config(page_title="BTO App", layout="wide")
 
 # Initialize session state for page tracking
 if 'page' not in st.session_state:
-    st.session_state.page = "BTO Eligibility Checker"
+    st.session_state.page = "HDB Resale Transactions Explorer"
 
 # Add disclaimer using an expander
 with st.expander("Disclaimer", expanded=False):
@@ -32,12 +32,12 @@ def navigate_to(page_name):
 
 # Create buttons for navigation
 st.sidebar.header("Navigation")
-if st.sidebar.button("🏠 BTO Eligibility Checker"):
-    navigate_to("BTO Eligibility Checker")
-if st.sidebar.button("🏠 HDB Resale Flat Price History"):
-    navigate_to("HDB Resale Flat Price History")
+if st.sidebar.button("🏠 HDB Resale Transactions Explorer"):
+    navigate_to("HDB Resale Transactions Explorer")
 if st.sidebar.button("✨ HDB Assistant"):
     navigate_to("HDB Assistant")
+# if st.sidebar.button("🏠 BTO Eligibility Checker"):
+#     navigate_to("BTO Eligibility Checker")
 if st.sidebar.button("👥 About Us"):
     navigate_to("About Us")
 if st.sidebar.button("📚 Methodology"):
@@ -46,7 +46,7 @@ if st.sidebar.button("📚 Methodology"):
 # Route to the selected page
 if st.session_state.page == "BTO Eligibility Checker":
     eligibility_checker.display()
-elif st.session_state.page == "HDB Resale Flat Price History":
+elif st.session_state.page == "HDB Resale Transactions Explorer":
     resale_prices.display()
 elif st.session_state.page == "HDB Assistant":
     hdb_assistant.display()

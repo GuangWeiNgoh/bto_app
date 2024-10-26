@@ -3,6 +3,10 @@ import json
 import requests
 import time
 import pandas as pd
+from datetime import datetime
+import matplotlib.pyplot as plt
+import seaborn as sns
+import altair as alt
 
 # Fetching the collection metadata from the main API
 def fetch_collection_metadata(collection_id):
@@ -83,9 +87,23 @@ def fetch_full_data():
                         'floor_area_sqm': -1,
                         'flat_model': 'Unknown',
                         'lease_commence_date': -1,
-                        'remaining_lease': 'Unknown',
+                        #'remaining_lease': 'Unknown',
                         'resale_price': -1
                     }, inplace=True)
+
+                    full_data['remaining_lease'] = full_data['remaining_lease'].str.split(' ').str[0]
+
+                    # Calculate the remaining lease based on the lease_commence_date for each row
+                    full_data['calculated_remaining_lease'] = 100 - (datetime.now().year - full_data['lease_commence_date'])
+
+                    # Use fillna to replace NaN values in remaining_lease with values from calculated_remaining_lease
+                    full_data['remaining_lease'] = full_data['remaining_lease'].fillna(full_data['calculated_remaining_lease'])
+
+                    # Drop the temporary column if it is no longer needed
+                    full_data.drop(columns=['calculated_remaining_lease'], inplace=True)
+
+                    full_data['flat_type'] = full_data['flat_type'].str.replace('-', ' ')
+
 
                     full_data['month'] = full_data['month'].astype(str)  
                     full_data['town'] = full_data['town'].astype(str)
@@ -95,8 +113,8 @@ def fetch_full_data():
                     full_data['storey_range'] = full_data['storey_range'].astype(str) 
                     full_data['floor_area_sqm'] = full_data['floor_area_sqm'].astype(float) 
                     full_data['flat_model'] = full_data['flat_model'].astype(str) 
-                    full_data['lease_commence_date'] = full_data['lease_commence_date'].astype(float)
-                    full_data['remaining_lease'] = full_data['remaining_lease'].astype(str)  
+                    full_data['lease_commence_date'] = full_data['lease_commence_date'].astype(int)
+                    full_data['remaining_lease'] = full_data['remaining_lease'].astype(int)  
                     full_data['resale_price'] = full_data['resale_price'].astype(float)  
 
                     full_data = full_data.sort_values(by='month', ascending=False).reset_index(drop=True)
@@ -107,52 +125,285 @@ def fetch_full_data():
             else:
                 st.warning("No datasets found in the response.")
 
+def alt_plot_price_by_town(data):
+    # Group by town and calculate the average resale price
+    avg_price_by_town = data.groupby('town')['resale_price'].mean().sort_values(ascending=False)
+    
+    # Convert to DataFrame
+    avg_price_by_town_df = avg_price_by_town.reset_index()
+    avg_price_by_town_df.columns = ['Town', 'Average Resale Price']
+
+    # Create an Altair bar chart with color gradient
+    chart = alt.Chart(avg_price_by_town_df).mark_bar().encode(
+        x=alt.X('Average Resale Price', title='Average Resale Price'),
+        y=alt.Y('Town', sort='-x', title='Town'),  # Sort by x-axis values
+        color=alt.Color('Average Resale Price', 
+                        scale=alt.Scale(scheme='blues'), 
+                        legend=None),  # Gradient based on resale price
+        tooltip=['Town', 'Average Resale Price']
+    ).properties(
+        title='Average Resale Price by Town',
+        width=700
+    )
+
+    # Display the chart in Streamlit
+    st.altair_chart(chart, use_container_width=True)
+
+def alt_plot_price_by_flat_type(data):
+    # Group by flat type and calculate the average resale price
+    avg_price_by_flat_type = data.groupby('flat_type')['resale_price'].mean().sort_values(ascending=False)
+
+    # Convert to DataFrame
+    avg_price_by_flat_type_df = avg_price_by_flat_type.reset_index()
+    avg_price_by_flat_type_df.columns = ['Flat Type', 'Average Resale Price']
+
+    # Create an Altair bar chart with color gradient
+    chart = alt.Chart(avg_price_by_flat_type_df).mark_bar().encode(
+        x=alt.X('Average Resale Price', title='Average Resale Price'),
+        y=alt.Y('Flat Type', sort='-x', title='Flat Type'),  # Sort by x-axis values
+        color=alt.Color('Average Resale Price', 
+                        scale=alt.Scale(scheme='greens'), 
+                        legend=None),  # Gradient based on resale price
+        tooltip=['Flat Type', 'Average Resale Price']
+    ).properties(
+        title='Average Resale Price by Flat Type',
+        width=700
+    )
+
+    # Display the chart in Streamlit
+    st.altair_chart(chart, use_container_width=True)
+
+def alt_plot_price_by_year(data):
+    # Extract the year from the 'month' column (assuming 'month' is in 'yyyy-mm' format)
+    data['year'] = pd.to_datetime(data['month']).dt.year
+
+    # Calculate the average resale price per year
+    avg_price_by_year = data.groupby('year')['resale_price'].mean().reset_index()
+
+    # Create an Altair line chart
+    line_chart = alt.Chart(avg_price_by_year).mark_line(point=True).encode(
+        x=alt.X('year:O', title='Year'),
+        y=alt.Y('resale_price:Q', title='Average Resale Price'),
+        tooltip=['year', 'resale_price']
+    ).properties(
+        title="Average HDB Resale Price Over the Years",
+        width=700,
+        height=400
+    )
+
+    st.altair_chart(line_chart, use_container_width=True)
+
+
 # Main function to display the resale prices
 def display():
-    st.title("🏠 HDB Resale Flat Price History")
-    st.write("Latest HDB resale prices data from data.gov.sg. Includes data from 1990 - Present.")
+    st.title("🏠 HDB Resale Transactions Explorer")
+    st.write("Explore resale flat transactions data. HDB resale prices data from data.gov.sg. Includes data from 1990 - Present.")
 
-    # Fetch data once and keep it in session state
+    # Initialize session state data
     if 'data' not in st.session_state:
         st.session_state.data = fetch_full_data()
-        st.session_state.filtered_data = st.session_state.data  # Initialize with full data
+        st.session_state.filtered_data = st.session_state.data
+        st.session_state.selected_years = (int(st.session_state.data['month'].str[:4].min()), int(st.session_state.data['month'].str[:4].max()))
         st.session_state.selected_month = []
         st.session_state.selected_town = []
         st.session_state.selected_flat_type = []
+        st.session_state.selected_storey_range = []
+        st.session_state.floor_area_sqm_range = (
+            int(st.session_state.data['floor_area_sqm'].min()), 
+            int(st.session_state.data['floor_area_sqm'].max())
+        )
+        st.session_state.selected_flat_model = []
+        st.session_state.lease_commence_date_range = (
+            int(st.session_state.data['lease_commence_date'].min()), 
+            datetime.now().year
+        )
+        st.session_state.remaining_lease_range = (
+            int(st.session_state.data['remaining_lease'].min()), 
+            int(st.session_state.data['remaining_lease'].max())
+        )
+        st.session_state.resale_price_range = (
+            int(st.session_state.data['resale_price'].min()), 
+            int(st.session_state.data['resale_price'].max())
+        )
 
     data = st.session_state.data
 
-    # Create filter options
-    selected_month = st.multiselect("Select Month", options=data['month'].unique(), default=st.session_state.selected_month)
-    selected_town = st.multiselect("Select Town", options=data['town'].unique(), default=st.session_state.selected_town)
-    selected_flat_type = st.multiselect("Select Flat Type", options=data['flat_type'].unique(), default=st.session_state.selected_flat_type)
+    # Get min and max year from the month data
+    min_year = int(data['month'].str[:4].min())
+    max_year = int(data['month'].str[:4].max())
 
-    # Search button
-    if st.button("Search"):
-        # Store selections in session state
-        st.session_state.selected_month = selected_month
-        st.session_state.selected_town = selected_town
-        st.session_state.selected_flat_type = selected_flat_type
-        
-        # Initialize a condition that is always True
-        filtered_data = data.copy()  # Start with the full dataset
-        
-        # Apply filters only if selections are made
-        if selected_month:
-            filtered_data = filtered_data[filtered_data['month'].isin(selected_month)]
-        if selected_town:
-            filtered_data = filtered_data[filtered_data['town'].isin(selected_town)]
-        if selected_flat_type:
-            filtered_data = filtered_data[filtered_data['flat_type'].isin(selected_flat_type)]
+    # Create a slider for year selection
+    selected_years = st.slider(
+        "Select Year Range",
+        min_value=min_year,
+        max_value=max_year,
+        value=st.session_state.selected_years,
+        step=1
+    )
 
-        # Store the filtered data in session state
-        st.session_state.filtered_data = filtered_data
+    # Create two rows of filters
+    row1_col1, row1_col2, row1_col3 = st.columns(3)
+
+    with row1_col1:
+        # selected_month = st.multiselect(
+        #     "Select Month", 
+        #     options=sorted(data['month'].unique(), reverse=True), 
+        #     default=st.session_state.selected_month
+        # )
+        # Filter months based on the selected year range
+        years_range = list(range(selected_years[0], selected_years[1] + 1))
+        months_in_years = data[data['month'].str[:4].isin(map(str, years_range))]['month'].unique()
+        selected_month = st.multiselect(
+            "Select Month", 
+            options=sorted(months_in_years, reverse=True), 
+            default=st.session_state.selected_month
+        )
+        selected_storey_range = st.multiselect(
+            "Select Storey Range", 
+            options=sorted(data['storey_range'].unique()), 
+            default=st.session_state.selected_storey_range
+        )
+
+    with row1_col2:
+        selected_town = st.multiselect(
+            "Select Town", 
+            options=sorted(data['town'].unique()), 
+            default=st.session_state.selected_town
+        )
+        selected_flat_model = st.multiselect(
+            "Select Flat Model", 
+            options=sorted(data['flat_model'].unique()), 
+            default=st.session_state.selected_flat_model
+        )
+
+    with row1_col3:
+        selected_flat_type = st.multiselect(
+            "Select Flat Type", 
+            options=sorted(data['flat_type'].unique(), reverse=True), 
+            default=st.session_state.selected_flat_type
+        )
+
+    # Second row for sliders
+    row2_col1, spacer1, row2_col2 = st.columns([1,0.05,1])
+
+    with row2_col1:
+        floor_area_sqm_range = st.slider(
+            "Select Floor Area (sqm)", 
+            min_value=int(data['floor_area_sqm'].min()), 
+            max_value=int(data['floor_area_sqm'].max()), 
+            value=st.session_state.floor_area_sqm_range,
+            step=1
+        )
+        
+        remaining_lease_range = st.slider(
+            "Select Remaining Lease (Years)", 
+            min_value=int(data['remaining_lease'].min()), 
+            max_value=int(data['remaining_lease'].max()), 
+            value=st.session_state.remaining_lease_range,
+            step=1
+        )    
+
+    with row2_col2:
+        lease_commence_date_range = st.slider(
+            "Select Lease Commence Date", 
+            min_value=int(data['lease_commence_date'].min()), 
+            max_value=datetime.now().year, 
+            value=st.session_state.lease_commence_date_range,
+            step=1
+        )
+        
+        resale_price_range = st.slider(
+            "Select Resale Price ($)", 
+            min_value=int(data['resale_price'].min()), 
+            max_value=int(data['resale_price'].max()), 
+            value=st.session_state.resale_price_range,
+            step=1000
+        )
+
+    # Create a row for the Search button and warning
+    button_col, warning_col, spacer2 = st.columns([1, 6, 9])  # Adjust the width ratio as needed
+
+    with button_col:
+        if st.button("Search"):
+            # Store selections in session state
+            st.session_state.selected_years = selected_years
+            st.session_state.selected_month = selected_month
+            st.session_state.selected_town = selected_town
+            st.session_state.selected_flat_type = selected_flat_type
+            st.session_state.selected_storey_range = selected_storey_range
+            st.session_state.floor_area_sqm_range = floor_area_sqm_range
+            st.session_state.selected_flat_model = selected_flat_model
+            st.session_state.lease_commence_date_range = lease_commence_date_range
+            st.session_state.remaining_lease_range = remaining_lease_range
+            st.session_state.resale_price_range = resale_price_range
+            
+            # Initialize filtered data with the full dataset
+            filtered_data = data.copy()
+            
+            # Apply filters only if selections are made
+            if selected_years:
+                # Get the start and end years from the selected_years tuple
+                start_year, end_year = selected_years
+
+                # Filter the data to include only rows with months in the selected year range
+                filtered_data = filtered_data[
+                    filtered_data['month'].str[:4].astype(int).between(start_year, end_year)
+                ]
+            if selected_month:
+                filtered_data = filtered_data[filtered_data['month'].isin(selected_month)]
+            if selected_town:
+                filtered_data = filtered_data[filtered_data['town'].isin(selected_town)]
+            if selected_flat_type:
+                filtered_data = filtered_data[filtered_data['flat_type'].isin(selected_flat_type)]
+            if selected_storey_range:
+                filtered_data = filtered_data[filtered_data['storey_range'].isin(selected_storey_range)]
+            if selected_flat_model:
+                filtered_data = filtered_data[filtered_data['flat_model'].isin(selected_flat_model)]
+
+            # Apply slider filters
+            filtered_data = filtered_data[
+                (filtered_data['floor_area_sqm'].between(*floor_area_sqm_range)) &
+                (filtered_data['lease_commence_date'].between(*lease_commence_date_range)) &
+                (filtered_data['remaining_lease'].between(*remaining_lease_range)) &
+                (filtered_data['resale_price'].between(*resale_price_range))
+            ]
+
+            # Store the filtered data in session state
+            st.session_state.filtered_data = filtered_data
+
+    with warning_col:
+        st.write("Note: Results will update only after clicking on the Search button.")
 
     # Display the filtered data or the full data if no search has been performed yet
     filtered_data = st.session_state.get('filtered_data', data)
-    
-    # Display the DataFrame without flashing
-    st.dataframe(filtered_data)
+
+    # Save a separate DataFrame for display
+    display_data = filtered_data.copy()
+
+    # Convert lease_commence_date to string format without commas
+    display_data['lease_commence_date'] = display_data['lease_commence_date'].astype(str)
+
+    # Add vertical spacing above using markdown
+    st.markdown("<br>" * 1, unsafe_allow_html=True)  # Adjust the number for more spacing
+
+    # Create a row for the Search button and warning
+    num_results, spacer3, sort_warning = st.columns([1, 2, 1.1])  # Adjust the width ratio as needed
+
+    with num_results:
+        # Display the number of results found above the table
+        st.write(f"Resale Flat Records Found: **{len(display_data)}**")
+
+    with sort_warning:
+        st.write("Sort by clicking the column headers (<~150k Results)")
+
+    st.dataframe(display_data, hide_index=True, use_container_width=True)  # Ensure the table fills the width
+
+    # Add vertical spacing above using markdown
+    st.markdown("<br>" * 1, unsafe_allow_html=True)  # Adjust the number for more spacing
+
+    alt_plot_price_by_town(display_data)
+    alt_plot_price_by_flat_type(display_data)
+    alt_plot_price_by_year(display_data)
 
 # This is a typical structure for a Streamlit app
 if __name__ == "__main__":
