@@ -1,5 +1,9 @@
-# app.py
 import streamlit as st
+
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 from tabs import eligibility_checker, about_us, hdb_assistant, methodology, resale_transactions_explorer
 
 from utility import check_password
