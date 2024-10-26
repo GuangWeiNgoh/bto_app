@@ -1,4 +1,3 @@
-# pages/methodology.py
 import streamlit as st
 
 def display():

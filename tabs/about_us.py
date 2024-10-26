@@ -1,4 +1,3 @@
-# pages/about_us.py
 import streamlit as st
 
 def display():

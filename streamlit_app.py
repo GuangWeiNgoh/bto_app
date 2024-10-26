@@ -1,6 +1,6 @@
 # app.py
 import streamlit as st
-from tabs import eligibility_checker, resale_prices, about_us, hdb_assistant, methodology
+from tabs import eligibility_checker, about_us, hdb_assistant, methodology, resale_transactions_explorer
 
 from utility import check_password
 
@@ -47,7 +47,7 @@ if st.sidebar.button("📚 Methodology"):
 if st.session_state.page == "BTO Eligibility Checker":
     eligibility_checker.display()
 elif st.session_state.page == "HDB Resale Transactions Explorer":
-    resale_prices.display()
+    resale_transactions_explorer.display()
 elif st.session_state.page == "HDB Assistant":
     hdb_assistant.display()
 elif st.session_state.page == "About Us":

@@ -1,4 +1,3 @@
-# pages/eligibility_checker.py
 import streamlit as st
 
 def display():
