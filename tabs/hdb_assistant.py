@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 from openai import OpenAI
 from crewai import Agent, Task, Crew
 from crewai_tools import WebsiteSearchTool
@@ -6,10 +7,9 @@ from dotenv import load_dotenv
 
 load_dotenv() 
 
-# Initialize the OpenAI client with the API key from Streamlit secrets
-client = OpenAI(
-    api_key=st.secrets["openai"]["api_key"],
-)
+os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+
+client = OpenAI()
 
 # Set up the website search tool to scrape data from the HDB website
 tool_websearch = WebsiteSearchTool("https://www.hdb.gov.sg/")
@@ -85,7 +85,6 @@ crew = Crew(
     verbose=True
 )
 
-# Function to display the chatbot
 def display():
     st.title("✨ HDB Assistant")
     st.write("Get assistance with your HDB questions from GPT 3.5 Turbo & information straight from HDB's website.")
@@ -94,7 +93,7 @@ def display():
     if 'messages' not in st.session_state:
         st.session_state.messages = []
 
-    # Function to display the chat messages
+    # Display the chat messages
     def display_messages(input):
         st.markdown(
                     f"""

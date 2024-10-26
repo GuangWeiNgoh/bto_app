@@ -119,7 +119,6 @@ def fetch_full_data():
 
                     full_data = full_data.sort_values(by='month', ascending=False).reset_index(drop=True)
                     full_data.reset_index(drop=True, inplace=True)
-                    #full_data['lease_commence_date'] = full_data['lease_commence_date'].astype(int)  # Example for float conversion
 
                     return full_data
             else:
@@ -405,6 +404,5 @@ def display():
     alt_plot_price_by_flat_type(display_data)
     alt_plot_price_by_year(display_data)
 
-# This is a typical structure for a Streamlit app
 if __name__ == "__main__":
     display()
