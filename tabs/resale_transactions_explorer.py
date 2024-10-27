@@ -243,7 +243,7 @@ def display():
     # Get the modified date
     if os.path.exists(LOCAL_DATA_ZIP_PATH):
         modified_date = get_zip_modified_date(LOCAL_DATA_ZIP_PATH)
-        last_updated_message = f"Last updated on: **{modified_date.strftime('%Y-%m-%d %H:%M:%S')}**"
+        last_updated_message = f"Last updated on: **{modified_date.strftime('%Y-%m-%d %H:%M:%S')} (GMT)**"
     else:
         last_updated_message = "ZIP file not found!"
 
@@ -307,11 +307,6 @@ def display():
     row1_col1, row1_col2, row1_col3 = st.columns(3)
 
     with row1_col1:
-        # selected_month = st.multiselect(
-        #     "Select Month", 
-        #     options=sorted(data['month'].unique(), reverse=True), 
-        #     default=st.session_state.selected_month
-        # )
         # Filter months based on the selected year range
         years_range = list(range(selected_years[0], selected_years[1] + 1))
         months_in_years = data[data['month'].str[:4].isin(map(str, years_range))]['month'].unique()
