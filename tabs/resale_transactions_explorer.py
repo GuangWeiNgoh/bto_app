@@ -7,6 +7,47 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import seaborn as sns
 import altair as alt
+import os
+import zipfile
+import pickle
+
+# File path for storing the data locally
+LOCAL_DATA_ZIP_PATH = "resale_data.zip"
+PICKLE_FILE_NAME = "resale_data.pkl"
+
+# Function to load data from the ZIP file if available, else fetch new data
+def load_or_fetch_data():
+    # Check if the local ZIP file exists and load it if it does
+    if os.path.exists(LOCAL_DATA_ZIP_PATH):
+        with zipfile.ZipFile(LOCAL_DATA_ZIP_PATH, 'r') as zip_ref:
+            with zip_ref.open(PICKLE_FILE_NAME) as pkl_file:
+                data = pickle.load(pkl_file)
+        return data
+    else:
+        # Fetch data and save to local ZIP file if not available
+        data = fetch_full_data()
+        save_data_to_zip(data)
+        return data
+    
+# Function to save the data to a ZIP file with higher compression
+def save_data_to_zip(data):
+    with zipfile.ZipFile(LOCAL_DATA_ZIP_PATH, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zip_ref:
+        with zip_ref.open(PICKLE_FILE_NAME, 'w') as pkl_file:
+            pickle.dump(data, pkl_file)
+
+# Function to get the modified date of the ZIP file
+def get_zip_modified_date(LOCAL_DATA_ZIP_PATH):
+    # Get the last modified timestamp
+    modified_time = os.path.getmtime(LOCAL_DATA_ZIP_PATH)
+    # Convert to a datetime object
+    return datetime.fromtimestamp(modified_time)
+    
+# Button to fetch the latest data and update the ZIP file
+def update_data():
+    data = fetch_full_data()
+    save_data_to_zip(data)
+    st.success("Data updated successfully!")
+    st.session_state.data = data
 
 # Fetching the collection metadata from the main API
 def fetch_collection_metadata(collection_id):
@@ -173,17 +214,18 @@ def alt_plot_price_by_flat_type(data):
     st.altair_chart(chart, use_container_width=True)
 
 def alt_plot_price_by_year(data):
-    # Extract the year from the 'month' column (assuming 'month' is in 'yyyy-mm' format)
+    # Extract the year from the 'month' column
     data['year'] = pd.to_datetime(data['month']).dt.year
 
     # Calculate the average resale price per year
-    avg_price_by_year = data.groupby('year')['resale_price'].mean().reset_index()
+    avg_price_by_year = data.groupby('year', as_index=False)['resale_price'].mean()
+    avg_price_by_year.columns = ['Year', 'Average Resale Price']
 
     # Create an Altair line chart
     line_chart = alt.Chart(avg_price_by_year).mark_line(point=True).encode(
-        x=alt.X('year:O', title='Year'),
-        y=alt.Y('resale_price:Q', title='Average Resale Price'),
-        tooltip=['year', 'resale_price']
+        x=alt.X('Year:O', title='Year'),  # specify 'Year' as ordinal if it's discrete
+        y=alt.Y('Average Resale Price', title='Average Resale Price'),
+        tooltip=['Year', 'Average Resale Price']
     ).properties(
         title="Average Resale Price Over the Years",
         width=700,
@@ -198,9 +240,30 @@ def display():
     st.title("🏠 HDB Resale Transactions Explorer")
     st.write("Explore resale flat transactions data. HDB resale prices data from data.gov.sg. Includes data from 1990 - Present.")
 
+    # Get the modified date
+    if os.path.exists(LOCAL_DATA_ZIP_PATH):
+        modified_date = get_zip_modified_date(LOCAL_DATA_ZIP_PATH)
+        last_updated_message = f"Last updated on: **{modified_date.strftime('%Y-%m-%d %H:%M:%S')}**"
+    else:
+        last_updated_message = "ZIP file not found!"
+
+    button_col, note_col, spacer = st.columns([1.5, 9, 6])  # Adjust the width ratio as needed
+
+    # Create a placeholder for messages
+    message_placeholder = st.empty()
+
+    with button_col:
+        if st.button("Update Data"):
+            with message_placeholder.container():
+                update_data()
+
+    with note_col:
+        st.write("Click to update with the most recent transactions data from data.gov.sg. " + last_updated_message)
+
+
     # Initialize session state data
     if 'data' not in st.session_state:
-        st.session_state.data = fetch_full_data()
+        st.session_state.data = load_or_fetch_data()
         st.session_state.filtered_data = st.session_state.data
         st.session_state.selected_years = (int(st.session_state.data['month'].str[:4].min()), int(st.session_state.data['month'].str[:4].max()))
         st.session_state.selected_month = []
