@@ -5,10 +5,10 @@ def display():
     st.title("👥 About Us")
 
     # Application Title
-    st.header("HDB Resale Transactions Explorer")
+    st.header("🏠 HDB Resale Transactions Explorer")
 
     # Project Scope for Resale Transactions Explorer
-    with st.expander("Use Case 1 Scope", expanded=True):
+    with st.expander("Scope", expanded=True):
         st.write("""
         The HDB Resale Transactions Explorer is a web application designed to facilitate the exploration and analysis of 
         Housing Development Board (HDB) resale flat transactions in Singapore. The application provides users with an 
@@ -83,10 +83,10 @@ def display():
         """)
 
     # HDB Assistant Project Overview
-    st.header("HDB Assistant")
+    st.header("✨ HDB Assistant")
 
     # Project Scope for HDB Assistant
-    with st.expander("Use Case 2 Scope", expanded=True):
+    with st.expander("Scope", expanded=True):
         st.write("""
         The project aims to create a web application using Streamlit that serves as an interactive assistant for answering questions related to Singapore's Housing and Development Board (HDB) flats. 
         The application integrates natural language processing (NLP) capabilities from OpenAI's GPT model and web scraping tools to gather accurate and up-to-date information directly from the HDB official website.
