@@ -9,8 +9,8 @@ from tabs import eligibility_checker, about_us, hdb_assistant, methodology, resa
 from utility import check_password
 
 # Do not continue if check_password is not True.  
-#if not check_password():  
-#    st.stop()
+if not check_password():  
+   st.stop()
 
 # Set the page configuration
 st.set_page_config(page_title="HDB Explorer", layout="wide")
