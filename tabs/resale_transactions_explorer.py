@@ -185,7 +185,7 @@ def alt_plot_price_by_year(data):
         y=alt.Y('resale_price:Q', title='Average Resale Price'),
         tooltip=['year', 'resale_price']
     ).properties(
-        title="Average HDB Resale Price Over the Years",
+        title="Average Resale Price Over the Years",
         width=700,
         height=400
     )
