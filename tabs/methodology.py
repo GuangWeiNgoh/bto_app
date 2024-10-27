@@ -18,3 +18,8 @@ def display():
             ''',
             unsafe_allow_html=True
         )
+
+    st.write("")
+
+    with st.expander("View PNG Version", expanded=False):
+        st.image("images/HDB_Explorer_Methodology.png", caption="Methodology Diagram (PNG)", use_column_width=True)
