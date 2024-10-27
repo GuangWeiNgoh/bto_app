@@ -247,7 +247,7 @@ def display():
     else:
         last_updated_message = "ZIP file not found!"
 
-    button_col, note_col, spacer = st.columns([1.5, 9, 6])  # Adjust the width ratio as needed
+    button_col, note_col, spacer = st.columns([1.5, 10, 5])  # Adjust the width ratio as needed
 
     # Create a placeholder for messages
     message_placeholder = st.empty()
