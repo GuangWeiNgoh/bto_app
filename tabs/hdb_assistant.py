@@ -87,7 +87,7 @@ crew = Crew(
 
 def display():
     st.title("✨ HDB Assistant")
-    st.write("Get assistance with your HDB questions from GPT 3.5 Turbo & information straight from HDB's website.")
+    st.write("Get assistance with your HDB questions from GPT 3.5 Turbo and information straight from HDB's website.")
 
     # Initialize session state for messages if it doesn't exist
     if 'messages' not in st.session_state:

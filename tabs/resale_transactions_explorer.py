@@ -258,7 +258,7 @@ def display():
                 update_data()
 
     with note_col:
-        st.write("Click to update with the most recent transactions data from data.gov.sg. " + last_updated_message)
+        st.write("Click to update with the most recent transactions data from data.gov.sg.  \n" + last_updated_message)
 
 
     # Initialize session state data
