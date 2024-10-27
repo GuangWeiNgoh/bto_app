@@ -240,6 +240,17 @@ def display():
     st.title("🏠 HDB Resale Transactions Explorer")
     st.write("Explore resale flat transactions data. HDB resale prices data from data.gov.sg. Includes data from 1990 - Present.")
 
+    st.markdown(
+        """
+        <style>
+        .stForm {
+            border: none;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
     # Get the modified date
     if os.path.exists(LOCAL_DATA_ZIP_PATH):
         modified_date = get_zip_modified_date(LOCAL_DATA_ZIP_PATH)
@@ -294,173 +305,177 @@ def display():
     min_year = int(data['month'].str[:4].min())
     max_year = int(data['month'].str[:4].max())
 
-    # Create a slider for year selection
-    selected_years = st.slider(
-        "Select Year Range",
-        min_value=min_year,
-        max_value=max_year,
-        value=st.session_state.selected_years,
-        step=1
-    )
+    with st.form(key='filter_form'):
 
-    # Create two rows of filters
-    row1_col1, row1_col2, row1_col3 = st.columns(3)
-
-    with row1_col1:
-        # Filter months based on the selected year range
-        years_range = list(range(selected_years[0], selected_years[1] + 1))
-        months_in_years = data[data['month'].str[:4].isin(map(str, years_range))]['month'].unique()
-        selected_month = st.multiselect(
-            "Select Month", 
-            options=sorted(months_in_years, reverse=True), 
-            default=st.session_state.selected_month
-        )
-        selected_storey_range = st.multiselect(
-            "Select Storey Range", 
-            options=sorted(data['storey_range'].unique()), 
-            default=st.session_state.selected_storey_range
-        )
-
-    with row1_col2:
-        selected_town = st.multiselect(
-            "Select Town", 
-            options=sorted(data['town'].unique()), 
-            default=st.session_state.selected_town
-        )
-        selected_flat_model = st.multiselect(
-            "Select Flat Model", 
-            options=sorted(data['flat_model'].unique()), 
-            default=st.session_state.selected_flat_model
-        )
-
-    with row1_col3:
-        selected_flat_type = st.multiselect(
-            "Select Flat Type", 
-            options=sorted(data['flat_type'].unique(), reverse=True), 
-            default=st.session_state.selected_flat_type
-        )
-
-    # Second row for sliders
-    row2_col1, spacer1, row2_col2 = st.columns([1,0.05,1])
-
-    with row2_col1:
-        floor_area_sqm_range = st.slider(
-            "Select Floor Area (sqm)", 
-            min_value=int(data['floor_area_sqm'].min()), 
-            max_value=int(data['floor_area_sqm'].max()), 
-            value=st.session_state.floor_area_sqm_range,
+        # Create a slider for year selection
+        selected_years = st.slider(
+            "Select Year Range",
+            min_value=min_year,
+            max_value=max_year,
+            value=st.session_state.selected_years,
             step=1
         )
-        
-        remaining_lease_range = st.slider(
-            "Select Remaining Lease (Years)", 
-            min_value=int(data['remaining_lease'].min()), 
-            max_value=int(data['remaining_lease'].max()), 
-            value=st.session_state.remaining_lease_range,
-            step=1
-        )    
 
-    with row2_col2:
-        lease_commence_date_range = st.slider(
-            "Select Lease Commence Date", 
-            min_value=int(data['lease_commence_date'].min()), 
-            max_value=datetime.now().year, 
-            value=st.session_state.lease_commence_date_range,
-            step=1
-        )
-        
-        resale_price_range = st.slider(
-            "Select Resale Price ($)", 
-            min_value=int(data['resale_price'].min()), 
-            max_value=int(data['resale_price'].max()), 
-            value=st.session_state.resale_price_range,
-            step=1000
-        )
+        # Create two rows of filters
+        row1_col1, row1_col2, row1_col3 = st.columns(3)
 
-    # Create a row for the Search button and warning
-    button_col, warning_col, spacer2 = st.columns([1, 6, 9])  # Adjust the width ratio as needed
+        with row1_col1:
+            # Filter months based on the selected year range
+            years_range = list(range(selected_years[0], selected_years[1] + 1))
+            months_in_years = data[data['month'].str[:4].isin(map(str, years_range))]['month'].unique()
+            selected_month = st.multiselect(
+                "Select Month", 
+                options=sorted(months_in_years, reverse=True), 
+                default=st.session_state.selected_month
+            )
+            selected_storey_range = st.multiselect(
+                "Select Storey Range", 
+                options=sorted(data['storey_range'].unique()), 
+                default=st.session_state.selected_storey_range
+            )
 
-    with button_col:
-        if st.button("Search"):
-            # Store selections in session state
-            st.session_state.selected_years = selected_years
-            st.session_state.selected_month = selected_month
-            st.session_state.selected_town = selected_town
-            st.session_state.selected_flat_type = selected_flat_type
-            st.session_state.selected_storey_range = selected_storey_range
-            st.session_state.floor_area_sqm_range = floor_area_sqm_range
-            st.session_state.selected_flat_model = selected_flat_model
-            st.session_state.lease_commence_date_range = lease_commence_date_range
-            st.session_state.remaining_lease_range = remaining_lease_range
-            st.session_state.resale_price_range = resale_price_range
+        with row1_col2:
+            selected_town = st.multiselect(
+                "Select Town", 
+                options=sorted(data['town'].unique()), 
+                default=st.session_state.selected_town
+            )
+            selected_flat_model = st.multiselect(
+                "Select Flat Model", 
+                options=sorted(data['flat_model'].unique()), 
+                default=st.session_state.selected_flat_model
+            )
+
+        with row1_col3:
+            selected_flat_type = st.multiselect(
+                "Select Flat Type", 
+                options=sorted(data['flat_type'].unique(), reverse=True), 
+                default=st.session_state.selected_flat_type
+            )
+
+        # Second row for sliders
+        row2_col1, spacer1, row2_col2 = st.columns([1,0.05,1])
+
+        with row2_col1:
+            floor_area_sqm_range = st.slider(
+                "Select Floor Area (sqm)", 
+                min_value=int(data['floor_area_sqm'].min()), 
+                max_value=int(data['floor_area_sqm'].max()), 
+                value=st.session_state.floor_area_sqm_range,
+                step=1
+            )
             
-            # Initialize filtered data with the full dataset
-            filtered_data = data.copy()
-            
-            # Apply filters only if selections are made
-            if selected_years:
-                # Get the start and end years from the selected_years tuple
-                start_year, end_year = selected_years
+            remaining_lease_range = st.slider(
+                "Select Remaining Lease (Years)", 
+                min_value=int(data['remaining_lease'].min()), 
+                max_value=int(data['remaining_lease'].max()), 
+                value=st.session_state.remaining_lease_range,
+                step=1
+            )    
 
-                # Filter the data to include only rows with months in the selected year range
+        with row2_col2:
+            lease_commence_date_range = st.slider(
+                "Select Lease Commence Date", 
+                min_value=int(data['lease_commence_date'].min()), 
+                max_value=datetime.now().year, 
+                value=st.session_state.lease_commence_date_range,
+                step=1
+            )
+            
+            resale_price_range = st.slider(
+                "Select Resale Price ($)", 
+                min_value=int(data['resale_price'].min()), 
+                max_value=int(data['resale_price'].max()), 
+                value=st.session_state.resale_price_range,
+                step=1000
+            )
+
+        # Create a row for the Search button and warning
+        button_col, warning_col, spacer2 = st.columns([1.5, 6, 9])  # Adjust the width ratio as needed
+
+        #submitted = st.form_submit_button("Apply Filters")
+
+        with button_col:
+            if st.form_submit_button("Apply Filters"):
+                # Store selections in session state
+                st.session_state.selected_years = selected_years
+                st.session_state.selected_month = selected_month
+                st.session_state.selected_town = selected_town
+                st.session_state.selected_flat_type = selected_flat_type
+                st.session_state.selected_storey_range = selected_storey_range
+                st.session_state.floor_area_sqm_range = floor_area_sqm_range
+                st.session_state.selected_flat_model = selected_flat_model
+                st.session_state.lease_commence_date_range = lease_commence_date_range
+                st.session_state.remaining_lease_range = remaining_lease_range
+                st.session_state.resale_price_range = resale_price_range
+                
+                # Initialize filtered data with the full dataset
+                filtered_data = data.copy()
+                
+                # Apply filters only if selections are made
+                if selected_years:
+                    # Get the start and end years from the selected_years tuple
+                    start_year, end_year = selected_years
+
+                    # Filter the data to include only rows with months in the selected year range
+                    filtered_data = filtered_data[
+                        filtered_data['month'].str[:4].astype(int).between(start_year, end_year)
+                    ]
+                if selected_month:
+                    filtered_data = filtered_data[filtered_data['month'].isin(selected_month)]
+                if selected_town:
+                    filtered_data = filtered_data[filtered_data['town'].isin(selected_town)]
+                if selected_flat_type:
+                    filtered_data = filtered_data[filtered_data['flat_type'].isin(selected_flat_type)]
+                if selected_storey_range:
+                    filtered_data = filtered_data[filtered_data['storey_range'].isin(selected_storey_range)]
+                if selected_flat_model:
+                    filtered_data = filtered_data[filtered_data['flat_model'].isin(selected_flat_model)]
+
+                # Apply slider filters
                 filtered_data = filtered_data[
-                    filtered_data['month'].str[:4].astype(int).between(start_year, end_year)
+                    (filtered_data['floor_area_sqm'].between(*floor_area_sqm_range)) &
+                    (filtered_data['lease_commence_date'].between(*lease_commence_date_range)) &
+                    (filtered_data['remaining_lease'].between(*remaining_lease_range)) &
+                    (filtered_data['resale_price'].between(*resale_price_range))
                 ]
-            if selected_month:
-                filtered_data = filtered_data[filtered_data['month'].isin(selected_month)]
-            if selected_town:
-                filtered_data = filtered_data[filtered_data['town'].isin(selected_town)]
-            if selected_flat_type:
-                filtered_data = filtered_data[filtered_data['flat_type'].isin(selected_flat_type)]
-            if selected_storey_range:
-                filtered_data = filtered_data[filtered_data['storey_range'].isin(selected_storey_range)]
-            if selected_flat_model:
-                filtered_data = filtered_data[filtered_data['flat_model'].isin(selected_flat_model)]
 
-            # Apply slider filters
-            filtered_data = filtered_data[
-                (filtered_data['floor_area_sqm'].between(*floor_area_sqm_range)) &
-                (filtered_data['lease_commence_date'].between(*lease_commence_date_range)) &
-                (filtered_data['remaining_lease'].between(*remaining_lease_range)) &
-                (filtered_data['resale_price'].between(*resale_price_range))
-            ]
+                # Store the filtered data in session state
+                st.session_state.filtered_data = filtered_data
 
-            # Store the filtered data in session state
-            st.session_state.filtered_data = filtered_data
+        with warning_col:
+            st.write("Note: Results will update only after clicking on the Apply Filters button.")
 
-    with warning_col:
-        st.write("Note: Results will update only after clicking on the Search button.")
+        # Display the filtered data or the full data if no search has been performed yet
+        filtered_data = st.session_state.get('filtered_data', data)
 
-    # Display the filtered data or the full data if no search has been performed yet
-    filtered_data = st.session_state.get('filtered_data', data)
+        # Save a separate DataFrame for display
+        display_data = filtered_data.copy()
 
-    # Save a separate DataFrame for display
-    display_data = filtered_data.copy()
+        # Convert lease_commence_date to string format without commas
+        display_data['lease_commence_date'] = display_data['lease_commence_date'].astype(str)
 
-    # Convert lease_commence_date to string format without commas
-    display_data['lease_commence_date'] = display_data['lease_commence_date'].astype(str)
+        # Add vertical spacing above using markdown
+        st.markdown("<br>" * 1, unsafe_allow_html=True)  # Adjust the number for more spacing
 
-    # Add vertical spacing above using markdown
-    st.markdown("<br>" * 1, unsafe_allow_html=True)  # Adjust the number for more spacing
+        # Create a row for the Search button and warning
+        num_results, spacer3, sort_warning = st.columns([1, 2, 1.1])  # Adjust the width ratio as needed
 
-    # Create a row for the Search button and warning
-    num_results, spacer3, sort_warning = st.columns([1, 2, 1.1])  # Adjust the width ratio as needed
+        with num_results:
+            # Display the number of results found above the table
+            st.write(f"Resale Flat Records Found: **{len(display_data)}**")
 
-    with num_results:
-        # Display the number of results found above the table
-        st.write(f"Resale Flat Records Found: **{len(display_data)}**")
+        with sort_warning:
+            st.write("Sort by clicking the column headers (<~150k Results)")
 
-    with sort_warning:
-        st.write("Sort by clicking the column headers (<~150k Results)")
+        st.dataframe(display_data, hide_index=True, use_container_width=True)  # Ensure the table fills the width
 
-    st.dataframe(display_data, hide_index=True, use_container_width=True)  # Ensure the table fills the width
+        # Add vertical spacing above using markdown
+        st.markdown("<br>" * 1, unsafe_allow_html=True)  # Adjust the number for more spacing
 
-    # Add vertical spacing above using markdown
-    st.markdown("<br>" * 1, unsafe_allow_html=True)  # Adjust the number for more spacing
-
-    alt_plot_price_by_town(display_data)
-    alt_plot_price_by_flat_type(display_data)
-    alt_plot_price_by_year(display_data)
+        alt_plot_price_by_town(display_data)
+        alt_plot_price_by_flat_type(display_data)
+        alt_plot_price_by_year(display_data)
 
 if __name__ == "__main__":
     display()
