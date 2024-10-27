@@ -92,7 +92,7 @@ def fetch_dataset(dataset_id):
     return pd.DataFrame()  # Return empty DataFrame if download fails
 
 def fetch_full_data():
-    with st.spinner("Fetching Resale Flat Data from data.gov.sg ..."):
+    with st.spinner("Fetching Resale Flat Transactions Data from data.gov.sg ..."):
         collection_id = 189  # Collection ID for HDB resale prices
         collection_data = fetch_collection_metadata(collection_id)
 
